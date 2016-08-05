@@ -1,27 +1,4 @@
-
-#include <ros/ros.h>
-#include <ros/console.h>
-#include <signal.h>
-#include <iostream>
-// PCL specific includes
-#include <sensor_msgs/PointCloud2.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/ModelCoefficients.h>
-#include <pcl/filters/radius_outlier_removal.h>
-#include <pcl/filters/conditional_removal.h>
-#include <pcl/filters/passthrough.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/filters/statistical_outlier_removal.h>
-#include <pcl/sample_consensus/method_types.h>
-#include <pcl/sample_consensus/model_types.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/segmentation/extract_clusters.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/kdtree/kdtree.h>
+#include "object_detection.h"
 
 ros::Publisher pub;
 double segmentation_distance_thresh = 0.1;
@@ -49,6 +26,14 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input){
   // Checking size of original cloud for thresholding when to stop removing planes
   int original_size = (*cloud).width;
 
+  // 1. Including PassThrough filter here. Removes areas that we are not interested in
+  pcl::PassThrough<pcl::PointXYZ> pass;
+  pass.setInputCloud(cloud);
+  pass.setFilterFieldName("z");
+  pass.setFilterLimits(0, 5);
+  pass.filter(*cloud);
+
+/*
   // Plane segmentation
   pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
   pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
@@ -77,10 +62,10 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input){
     extract.setInputCloud (cloud_without_planes);
     extract.filter (*cloud_without_planes);
   }
-
+*/
   // 3. Statistical outlier removal
   pcl::StatisticalOutlierRemoval <pcl::PointXYZ> sor;
-  sor.setInputCloud(cloud_without_planes);
+  sor.setInputCloud(cloud); //cloud_without_planes);
   sor.setMeanK (sor_mean_k);
   sor.setStddevMulThresh(sor_stdev_thresh);
   sor.filter(*cloud_without_planes);

@@ -7,8 +7,21 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  geometry_msgs
   pcl_ros
   tf
+  message_generation
+)
+
+add_message_files(
+  FILES
+  object_loc.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
 )
 
 catkin_package(
@@ -23,6 +36,3 @@ target_link_libraries(floor_and_wall_removal ${catkin_LIBRARIES})
 
 add_executable(object_clustering src/object_clustering.cpp)
 target_link_libraries(object_clustering ${catkin_LIBRARIES})
-
-add_executable(PCL_transform src/PCL_transform.cpp)
-target_link_libraries(PCL_transform ${catkin_LIBRARIES})

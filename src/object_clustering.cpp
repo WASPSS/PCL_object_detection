@@ -1,33 +1,8 @@
-#include <ros/ros.h>
-#include <ros/console.h>
-#include <iostream>
-#include <signal.h>
-#include "std_msgs/MultiArrayLayout.h"
-#include "std_msgs/MultiArrayDimension.h"
-#include "std_msgs/Float32MultiArray.h"
-// PCL specific includes
-#include <sensor_msgs/PointCloud2.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/ModelCoefficients.h>
-#include <pcl/filters/radius_outlier_removal.h>
-#include <pcl/filters/conditional_removal.h>
-#include <pcl/filters/passthrough.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/sample_consensus/method_types.h>
-#include <pcl/sample_consensus/model_types.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/filters/statistical_outlier_removal.h>
-#include <pcl/kdtree/kdtree.h>
-#include <pcl/segmentation/extract_clusters.h>
-
+#include "object_detection.h"
+#include <turtlebot_object_detection/object_loc.h>
 
 ros::Publisher pub_debug_pcl;
-ros::Publisher xyz_pub;
+ros::Publisher xyz_pub, pub_centroid;
 double cluster_tolerans = 0.01;
 int cluster_size_min = 20;
 int cluster_size_max = 500;
@@ -57,16 +32,24 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     // For each cluster calculate centroids and store in coordinates array
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
     for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it){
-      bool object = true;
+      pcl::PointCloud<pcl::PointXYZ>::Ptr tmp_cloud (new pcl::PointCloud<pcl::PointXYZ>);
       for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit){
-        if(cloud_without_planes->points[*pit].z>1){
-          object = false;
-        }
+        tmp_cloud->points.push_back (cloud_without_planes->points[*pit]);
       }
-      if(object){
-        for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit){
-          cloud_cluster->points.push_back (cloud_without_planes->points[*pit]);
-        }
+      pcl::PointXYZ min_point, max_point;
+      pcl::getMinMax3D(*tmp_cloud,min_point,max_point);
+      if(max_point.z < 0.5){
+        Eigen::Vector4f c;
+        pcl::compute3DCentroid(*tmp_cloud, c);
+        //std::cout << "Centroid is " << c << std::endl;
+        turtlebot_object_detection::object_loc object_loc_msg;
+        object_loc_msg.ID = 10;
+        object_loc_msg.point.x = c(0);
+        object_loc_msg.point.y = c(1);
+        object_loc_msg.point.z = c(2);
+        pub_centroid.publish(object_loc_msg);
+        (*cloud_cluster) = (*cloud_cluster)+(*tmp_cloud);
+
       }
     }
     cloud_cluster->width = cloud_cluster->points.size ();
@@ -103,6 +86,7 @@ int main (int argc, char** argv){
 
   // Create a ROS publisher for the output point cloud and coordinates of object
   pub_debug_pcl = nh.advertise<sensor_msgs::PointCloud2> ("/camera/depth/object_clusters", 1);
+  pub_centroid = nh.advertise<turtlebot_object_detection::object_loc> ("/object_location_pcl", 10);
   //xyz_pub = nh.advertise<std_msgs::Float32MultiArray> ("/PCL_woden_shape_recognition", 1);
 
   // Spin
