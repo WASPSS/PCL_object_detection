@@ -30,7 +30,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input){
   pcl::PassThrough<pcl::PointXYZ> pass;
   pass.setInputCloud(cloud);
   pass.setFilterFieldName("z");
-  pass.setFilterLimits(0, 5);
+  pass.setFilterLimits(0.05, 5);
   pass.filter(*cloud);
 
 /*

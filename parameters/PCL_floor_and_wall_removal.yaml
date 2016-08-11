@@ -1,2 +1,2 @@
-plane_segmentation: {distance_threshold: 0.01, rate_of_points_left: 1.0}
-statistical_outlier_removal: {mean_k: 30.0, stddev_mult_thresh: 1.0}
+plane_segmentation: {distance_threshold: 0.1, rate_of_points_left: 0.2}
+statistical_outlier_removal: {mean_k: 3.0, stddev_mult_thresh: 1.0}

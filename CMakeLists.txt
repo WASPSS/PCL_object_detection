@@ -10,19 +10,9 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   pcl_ros
   tf
-  message_generation
+  object_detecter_2d
 )
 
-add_message_files(
-  FILES
-  object_loc.msg
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  geometry_msgs
-)
 
 catkin_package(
 )
