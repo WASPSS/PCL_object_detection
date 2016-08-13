@@ -1,2 +1,0 @@
-cluster_size: {max: 2000, min: 200}
-cluster_tolerans: 0.1
