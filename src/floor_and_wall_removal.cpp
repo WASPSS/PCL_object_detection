@@ -1,4 +1,13 @@
-#include "object_detection.h"
+#include <ros/ros.h>
+#include <ros/console.h>
+#include <iostream>
+#include <signal.h>
+// PCL specific includes
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 
 ros::Publisher pub;
 double segmentation_distance_thresh = 0.1;
@@ -8,12 +17,12 @@ double sor_stdev_thresh = 1.0;
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input){
 
-  ros::param::getCached("/PCL_floor_and_wall_removal/plane_segmentation/distance_threshold", segmentation_distance_thresh);
-  ros::param::getCached("/PCL_floor_and_wall_removal/plane_segmentation/rate_of_points_left", segmentation_rate_of_points_left);
-  ros::param::getCached("/PCL_floor_and_wall_removal/statistical_outlier_removal/mean_k", sor_mean_k);
-  ros::param::getCached("/PCL_floor_and_wall_removal/statistical_outlier_removal/stddev_mult_thresh", sor_stdev_thresh);
+  ros::param::getCached("/PCL_ground_removal/plane_segmentation/distance_threshold", segmentation_distance_thresh);
+  ros::param::getCached("/PCL_ground_removal/plane_segmentation/rate_of_points_left", segmentation_rate_of_points_left);
+  ros::param::getCached("/PCL_ground_removal/statistical_outlier_removal/mean_k", sor_mean_k);
+  ros::param::getCached("/PCL_ground_removal/statistical_outlier_removal/stddev_mult_thresh", sor_stdev_thresh);
 
-  // Create a container for the data.
+  // Create a container for the output data.
   sensor_msgs::PointCloud2 output;
   // converting from sensor_msgs::PointCloud2 to pcl::PointCloud<pcl::PointXYZ>
   pcl::PCLPointCloud2 pcl_pc2;
@@ -76,21 +85,21 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input){
 
 }
 
-// ctrl-c handler in order to save parameters in PCL_floor_and_wall_removal .yaml
+// ctrl-c handler in order to save parameters in PCL_ground_removal.yaml
 void mySigintHandler(int sig){
   // Dump all parameters in objecd_detection_params.yaml
-  ros::param::set("/PCL_floor_and_wall_removal/plane_segmentation/distance_threshold", segmentation_distance_thresh);
-  ros::param::set("/PCL_floor_and_wall_removal/plane_segmentation/rate_of_points_left", segmentation_rate_of_points_left);
-  ros::param::set("/PCL_floor_and_wall_removal/statistical_outlier_removal/mean_k", sor_mean_k);
-  ros::param::set("/PCL_floor_and_wall_removal/statistical_outlier_removal/stddev_mult_thresh", sor_stdev_thresh);
-  system("rosparam dump -v ~/catkin_ws/src/turtlebot_object_detection/parameters/PCL_floor_and_wall_removal.yaml /PCL_floor_and_wall_removal");
+  ros::param::set("/PCL_ground_removal/plane_segmentation/distance_threshold", segmentation_distance_thresh);
+  ros::param::set("/PCL_ground_removal/plane_segmentation/rate_of_points_left", segmentation_rate_of_points_left);
+  ros::param::set("/PCL_ground_removal/statistical_outlier_removal/mean_k", sor_mean_k);
+  ros::param::set("/PCL_ground_removal/statistical_outlier_removal/stddev_mult_thresh", sor_stdev_thresh);
+  system("rosparam dump -v ~/catkin_ws/src/turtlebot_object_detection/parameters/PCL_ground_removal.yaml /PCL_ground_removal");
   ros::shutdown();
 }
 
 int main (int argc, char** argv){
   // Initialize ROS with NoSigintHandler
-  system("rosparam load ~/catkin_ws/src/turtlebot_object_detection/parameters/PCL_floor_and_wall_removal.yaml /PCL_floor_and_wall_removal");
-  ros::init (argc, argv, "floor_and_wall_removal", ros::init_options::NoSigintHandler);
+  system("rosparam load ~/catkin_ws/src/turtlebot_object_detection/parameters/PCL_ground_removal.yaml /PCL_ground_removal");
+  ros::init (argc, argv, "PCL_ground_removal", ros::init_options::NoSigintHandler);
   ros::NodeHandle nh;
 
   // In case of ctrl-c handle that with mySigintHandler
