@@ -24,5 +24,5 @@ include_directories(
 add_executable(PCL_ground_removal src/PCL_ground_removal.cpp)
 target_link_libraries(PCL_ground_removal ${catkin_LIBRARIES})
 
-add_executable(object_clustering src/object_clustering.cpp)
-target_link_libraries(object_clustering ${catkin_LIBRARIES})
+add_executable(PCL_object_clustering src/PCL_object_clustering.cpp)
+target_link_libraries(PCL_object_clustering ${catkin_LIBRARIES})

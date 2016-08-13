@@ -1,5 +1,18 @@
-#include "object_detection.h"
+#include <ros/ros.h>
+#include <ros/console.h>
+#include <iostream>
+#include <signal.h>
+#include "std_msgs/Float32MultiArray.h"
+#include <Eigen/Core>
 #include <object_detecter_2d/object_loc.h>
+#include <sensor_msgs/PointCloud2.h>
+// PCL specific includes
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/common/common.h>
+#include <pcl/common/transforms.h>
+
 
 ros::Publisher pub_debug_pcl;
 ros::Publisher xyz_pub, pub_centroid;
@@ -8,9 +21,9 @@ int cluster_size_min = 20;
 int cluster_size_max = 500;
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
-  ros::param::getCached("/object_clustring/cluster_tolerans",cluster_tolerans);
-  ros::param::getCached("/object_clustring/cluster_size/min",cluster_size_min);
-  ros::param::getCached("/object_clustring/cluster_size/max",cluster_size_max);
+  ros::param::getCached("/PCL_object_clustering/cluster_tolerans",cluster_tolerans);
+  ros::param::getCached("/PCL_object_clustering/cluster_size/min",cluster_size_min);
+  ros::param::getCached("/PCL_object_clustering/cluster_size/max",cluster_size_max);
   pcl::PCLPointCloud2 pcl_pc2;
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_without_planes (new pcl::PointCloud<pcl::PointXYZ>);
   pcl_conversions::toPCL(*cloud_msg,pcl_pc2);
@@ -65,17 +78,17 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 
 // ctrl-c handler in order to save parameters in PCL_shape_classifier_params.yaml
 void mySigintHandler(int sig){
-  ros::param::set("/object_clustring/cluster_tolerans",cluster_tolerans);
-  ros::param::set("/object_clustring/cluster_size/min",cluster_size_min);
-  ros::param::set("/object_clustring/cluster_size/max",cluster_size_max);
-  system("rosparam dump -v ~/catkin_ws/src/turtlebot_object_detection/parameters/PCL_object_clustering.yaml /object_clustring");
+  ros::param::set("/PCL_object_clustering/cluster_tolerans",cluster_tolerans);
+  ros::param::set("/PCL_object_clustering/cluster_size/min",cluster_size_min);
+  ros::param::set("/PCL_object_clustering/cluster_size/max",cluster_size_max);
+  system("rosparam dump -v ~/catkin_ws/src/turtlebot_object_detection/parameters/PCL_object_clustering.yaml /PCL_object_clustering");
   ros::shutdown();
 }
 
 
 int main (int argc, char** argv){
-  system("rosparam load ~/catkin_ws/src/turtlebot_object_detection/parameters/PCL_object_clustering.yaml /object_clustring");
-  ros::init (argc, argv, "object_clustring", ros::init_options::NoSigintHandler);
+  system("rosparam load ~/catkin_ws/src/turtlebot_object_detection/parameters/PCL_object_clustering.yaml /PCL_object_clustering");
+  ros::init (argc, argv, "PCL_object_clustering", ros::init_options::NoSigintHandler);
   ros::NodeHandle nh;
 
   // In case of ctrl-c handle that with mySigintHandler
