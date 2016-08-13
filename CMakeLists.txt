@@ -21,8 +21,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(floor_and_wall_removal src/floor_and_wall_removal.cpp)
-target_link_libraries(floor_and_wall_removal ${catkin_LIBRARIES})
+add_executable(PCL_ground_removal src/PCL_ground_removal.cpp)
+target_link_libraries(PCL_ground_removal ${catkin_LIBRARIES})
 
 add_executable(object_clustering src/object_clustering.cpp)
 target_link_libraries(object_clustering ${catkin_LIBRARIES})
